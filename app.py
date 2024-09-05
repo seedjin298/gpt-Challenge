@@ -10,6 +10,7 @@ from langchain.callbacks.base import BaseCallbackHandler
 import openai.error
 import streamlit as st
 import openai
+import os
 
 st.set_page_config(
     page_title="FullstackGPT Challenge Home",
@@ -33,8 +34,12 @@ class ChatCallbackHandler(BaseCallbackHandler):
 
 @st.cache_data(show_spinner="Embedding file...")
 def embed_file(file):
-    file_content = file.read()
     file_path = f"./.cache/files/{file.name}"
+    folder_path = os.path.dirname(file_path)
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+    file_content = file.read()
     with open(file_path, "wb") as f:
         f.write(file_content)
     cache_dir = LocalFileStore(f"./.cache/embeddings/{file.name}")
