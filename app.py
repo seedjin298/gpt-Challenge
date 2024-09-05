@@ -38,6 +38,7 @@ def embed_file(file):
     with open(file_path, "wb") as f:
         f.write(file_content)
     cache_dir = LocalFileStore(f"./.cache/embeddings/{file.name}")
+    LocalFileStore("./.cache/")
     splitter = CharacterTextSplitter.from_tiktoken_encoder(
         separator="\n",
         chunk_size=600,
@@ -307,15 +308,6 @@ with st.sidebar:
         )
 
 
-llm = ChatOpenAI(
-    temperature=0.1,
-    streaming=True,
-    callbacks=[
-        ChatCallbackHandler(),
-    ],
-    api_key=API_KEY,
-)
-
 if is_file:
     retriever = embed_file(file)
     send_message("I'm ready! Ask away!", "ai", save=False)
@@ -329,7 +321,14 @@ if is_file:
                 "question": RunnablePassthrough(),
             }
             | prompt
-            | llm
+            | ChatOpenAI(
+                temperature=0.1,
+                streaming=True,
+                callbacks=[
+                    ChatCallbackHandler(),
+                ],
+                api_key=API_KEY,
+            )
         )
         with st.chat_message("ai"):
             chain.invoke(message)
