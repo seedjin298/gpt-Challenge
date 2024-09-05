@@ -77,13 +77,12 @@ def format_docs(docs):
 
 
 def check_api_key(api_key):
-    openai.api_key = api_key
     try:
+        openai.api_key = api_key
         openai.Model.list()
+        return True
     except openai.error.AuthenticationError:
         return False
-    else:
-        return True
 
 
 prompt = ChatPromptTemplate.from_messages(
@@ -333,6 +332,6 @@ if is_file:
             | llm
         )
         with st.chat_message("ai"):
-            response = chain.invoke(message)
+            chain.invoke(message)
 else:
     st.session_state["messages"] = []
