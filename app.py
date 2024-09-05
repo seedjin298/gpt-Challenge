@@ -114,25 +114,6 @@ st.markdown(
 )
 
 with st.sidebar:
-    API_KEY = st.text_input("Please Enter Your OpenAI API Key", type="password")
-    is_file = False
-    if API_KEY:
-        is_valid = check_api_key(API_KEY)
-        if is_valid:
-            st.write("Valid OpenAI API Key")
-            file = st.file_uploader(
-                "Upload a .txt .pdf or .docx file",
-                type=["pdf", "txt", "docx"],
-                disabled=not is_valid,
-            )
-            if file:
-                is_file = True
-        else:
-            st.write("Invalid OpenAI API Key")
-            st.write("Please Enter Valid API Key")
-    else:
-        is_valid = False
-
     st.link_button(
         "Go to Github Repo",
         "https://github.com/seedjin298/gpt-Challenge/blob/main/app.py",
@@ -306,6 +287,26 @@ with st.sidebar:
 
         """
         )
+
+    API_KEY = st.text_input("Please Enter Your OpenAI API Key", type="password")
+    is_file = False
+    if API_KEY:
+        is_valid = check_api_key(API_KEY)
+        if is_valid:
+            st.write("Valid OpenAI API Key")
+            file = st.file_uploader(
+                "Upload a .txt .pdf or .docx file",
+                type=["pdf", "txt", "docx"],
+                disabled=not is_valid,
+            )
+            if file:
+                is_file = True
+        else:
+            st.write("Invalid OpenAI API Key")
+            st.write("Please Enter Valid API Key")
+    else:
+        is_valid = False
+
 
 llm = ChatOpenAI(
     temperature=0.1,
