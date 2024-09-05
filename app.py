@@ -327,7 +327,7 @@ if is_file:
                 callbacks=[
                     ChatCallbackHandler(),
                 ],
-                api_key=API_KEY,
+                openai_api_key=API_KEY,
             )
         )
         with st.chat_message("ai"):
