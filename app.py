@@ -38,7 +38,6 @@ def embed_file(file):
     with open(file_path, "wb") as f:
         f.write(file_content)
     cache_dir = LocalFileStore(f"./.cache/embeddings/{file.name}")
-    LocalFileStore("./.cache/")
     splitter = CharacterTextSplitter.from_tiktoken_encoder(
         separator="\n",
         chunk_size=600,
@@ -46,6 +45,7 @@ def embed_file(file):
     )
     loader = UnstructuredFileLoader(file_path)
     docs = loader.load_and_split(text_splitter=splitter)
+    # OpenAIEmbeddings애 api_key를 전달하였습니다.
     embeddings = OpenAIEmbeddings(openai_api_key=API_KEY)
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
     vectorstore = FAISS.from_documents(docs, cached_embeddings)
