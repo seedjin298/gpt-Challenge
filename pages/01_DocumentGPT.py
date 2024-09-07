@@ -1,6 +1,4 @@
-import openai.error
 import streamlit as st
-import openai
 
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
@@ -81,8 +79,8 @@ st.markdown(
 with st.sidebar:
     is_file = False
     API_KEY = get_api_key()
-    is_valid = is_api_key_valid(API_KEY)
     if API_KEY:
+        is_valid = is_api_key_valid(API_KEY)
         if is_valid:
             file = st.file_uploader(
                 "Upload a .txt .pdf or .docx file",

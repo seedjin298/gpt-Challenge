@@ -58,46 +58,46 @@ questions_prompt = ChatPromptTemplate.from_messages(
     Example Output:
      
     ```json
-    {{ "questions": [
+    {{ 'questions': [
             {{
-                "question": "What is the output of the following python code: `print(2 + 3)`?",
-                "answers": [
+                'question': 'What is the output of the following python code: `print(2 + 3)`?',
+                'answers': [
                         {{
-                            "answer": "23",
-                            "correct": false
+                            'answer': '23',
+                            'correct': false
                         }},
                         {{
-                            "answer": "6",
-                            "correct": false
+                            'answer': '6',
+                            'correct': false
                         }},
                         {{
-                            "answer": "9",
-                            "correct": false
+                            'answer': '9',
+                            'correct': false
                         }},
                         {{
-                            "answer": "5",
-                            "correct": true
+                            'answer': '5',
+                            'correct': true
                         }},
                 ]
             }},
                         {{
-                "question": "Which of the following is a data type in Python?",
-                "answers": [
+                'question': 'Which of the following is a data type in Python?',
+                'answers': [
                         {{
-                            "answer": "Car",
-                            "correct": false
+                            'answer': 'Car',
+                            'correct': false
                         }},
                         {{
-                            "answer": "Tuple",
-                            "correct": true
+                            'answer': 'Tuple',
+                            'correct': true
                         }},
                         {{
-                            "answer": "House",
-                            "correct": false
+                            'answer': 'House',
+                            'correct': false
                         }},
                         {{
-                            "answer": "Button",
-                            "correct": false
+                            'answer': 'Button',
+                            'correct': false
                         }},
                 ]
             }},
