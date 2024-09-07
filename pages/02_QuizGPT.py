@@ -156,7 +156,20 @@ function = {
 
 @st.cache_data(show_spinner="Making Quiz...")
 def run_quiz_chain(_docs, difficulty, topic):
-    chain = questions_prompt | llm
+    chain = questions_prompt | ChatOpenAI(
+        temperature=0.1,
+        model="gpt-3.5-turbo-1106",
+        streaming=True,
+        callbacks=[StreamingStdOutCallbackHandler()],
+        api_key=API_KEY,
+    ).bind(
+        function_call={
+            "name": "create_quiz",
+        },
+        functions=[
+            function,
+        ],
+    )
     response = chain.invoke({"context": format_docs(_docs), "difficulty": difficulty})
     response = response.additional_kwargs["function_call"]["arguments"]
     return json.loads(response)["questions"]
@@ -235,22 +248,6 @@ with st.sidebar:
         "Go to Github Repo",
         "https://github.com/seedjin298/gpt-Challenge/blob/main/pages/02_QuizGPT.py",
     )
-
-
-llm = ChatOpenAI(
-    temperature=0.1,
-    model="gpt-3.5-turbo-1106",
-    streaming=True,
-    callbacks=[StreamingStdOutCallbackHandler()],
-    api_key=API_KEY,
-).bind(
-    function_call={
-        "name": "create_quiz",
-    },
-    functions=[
-        function,
-    ],
-)
 
 if "correct_count" not in st.session_state:
     st.session_state["correct_count"] = 0
