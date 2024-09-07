@@ -256,17 +256,7 @@ if "quiz_start" not in st.session_state:
     st.session_state["quiz_start"] = False
 
 
-if not st.session_state["quiz_start"]:
-    st.markdown(
-        """
-    Welcome to QuizGPT.
-                
-    I will make a quiz from Wikipedia articles or files you upload to test your knowledge and help you study.
-                
-    Get started by uploading a file or searching on Wikipedia in the sidebar.
-    """
-    )
-else:
+if st.session_state["quiz_start"] and docs:
     response = run_quiz_chain(docs, difficulty, topic if topic else file.name)
 
     with st.form("questions_form"):
@@ -296,7 +286,18 @@ else:
             st.session_state["correct_count"] = 0
     if st.session_state["correct_count"] == 10:
         st.session_state["correct_count"] = 0
-        st.session_state["quiz_start"] = False
+        # st.session_state["quiz_start"] = False
         st.balloons()
         st.header("Congratulation! You Finished the Quiz!")
         st.subheader("Upload New File or Search New Keyword for Next Quiz!")
+
+else:
+    st.markdown(
+        """
+    Welcome to QuizGPT.
+                
+    I will make a quiz from Wikipedia articles or files you upload to test your knowledge and help you study.
+                
+    Get started by uploading a file or searching on Wikipedia in the sidebar.
+    """
+    )
