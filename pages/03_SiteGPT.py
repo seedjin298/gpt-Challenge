@@ -56,9 +56,10 @@ def get_answers(inputs):
     docs = inputs["docs"]
     question = inputs["question"]
 
-    llm.streaming = False
-    llm.callbacks = None
-    answers_chain = answers_prompt | llm
+    answers_chain = answers_prompt | ChatOpenAI(
+        temperature=0.1,
+        openai_api_key=API_KEY,
+    )
     return {
         "question": question,
         "answers": [
@@ -104,9 +105,12 @@ def chooses_answer(inputs):
     answers = inputs["answers"]
     question = inputs["question"]
 
-    llm.streaming = True
-    llm.callbacks = [ChatCallbackHandler()]
-    choose_chain = choose_prompt | llm
+    choose_chain = choose_prompt | ChatOpenAI(
+        temperature=0.1,
+        streaming=True,
+        callbacks=[ChatCallbackHandler()],
+        openai_api_key=API_KEY,
+    )
 
     condensed = "\n\n".join(
         f"{answer['answer']}\nSource:{answer['source']}\nDate:{answer['date']}\n"
