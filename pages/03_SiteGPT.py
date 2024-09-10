@@ -206,11 +206,6 @@ with st.sidebar:
         "https://github.com/seedjin298/gpt-Challenge/blob/main/pages/03_SiteGPT.py",
     )
 
-llm = ChatOpenAI(
-    temperature=0.1,
-    openai_api_key=API_KEY,
-)
-
 st.markdown(
     """     
     Ask questions about the content of Cloudflare's documentation.
