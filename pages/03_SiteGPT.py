@@ -187,7 +187,8 @@ def check_history(message):
         for item in temp
     ]
     try:
-        vector_store = FAISS.from_documents(docs, OpenAIEmbeddings())
+        embeddings = OpenAIEmbeddings(openai_api_key=API_KEY)
+        vector_store = FAISS.from_documents(docs, embeddings)
         found_docs = vector_store.similarity_search(message)
         candidate = found_docs[0].page_content.split("\n")[1]
         return candidate.replace("output:", "")
