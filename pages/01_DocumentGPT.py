@@ -3,50 +3,16 @@ import streamlit as st
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
 from langchain.chat_models import ChatOpenAI
-from langchain.callbacks.base import BaseCallbackHandler
 
 from components.get_file import embed_file
 from components.format_docs import format_docs
 from components.check_api_key import get_api_key, is_api_key_valid
+from components.chatbot import ChatCallbackHandler, send_message, paint_history
 
 st.set_page_config(
     page_title="DocumentGPT",
     page_icon="📃",
 )
-
-
-class ChatCallbackHandler(BaseCallbackHandler):
-    message = ""
-
-    def on_llm_start(self, *args, **kwargs):
-        self.message_box = st.empty()
-
-    def on_llm_end(self, *args, **kwargs):
-        save_message(self.message, "ai")
-
-    def on_llm_new_token(self, token, *args, **kwargs):
-        self.message += token
-        self.message_box.markdown(self.message)
-
-
-def save_message(message, role):
-    st.session_state["messages"].append({"message": message, "role": role})
-
-
-def send_message(message, role, save=True):
-    with st.chat_message(role):
-        st.markdown(message)
-    if save:
-        save_message(message, role)
-
-
-def paint_history():
-    for message in st.session_state["messages"]:
-        send_message(
-            message["message"],
-            message["role"],
-            save=False,
-        )
 
 
 prompt = ChatPromptTemplate.from_messages(

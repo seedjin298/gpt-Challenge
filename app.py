@@ -20,5 +20,9 @@ st.markdown(
     ## QuizGPT
     [QuizGPT](/QuizGPT)
     - Upload your files and answer quiz!
+
+    ## SiteGPT
+    [SiteGPT](/SiteGPT)
+    - Upload a sitemap and ask questions to chatbot!
 """
 )
