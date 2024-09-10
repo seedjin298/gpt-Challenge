@@ -8,7 +8,6 @@ from langchain.vectorstores.faiss import FAISS
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
-from langchain.schema import Document
 from fake_useragent import UserAgent
 
 from components.check_api_key import get_api_key, is_api_key_valid
@@ -173,29 +172,6 @@ def load_website(url):
         return []
 
 
-def save_history(message, answer):
-    st.session_state["history"].append({"question": message, "answer": answer})
-
-
-def check_history(message):
-    histories = st.session_state["history"]
-    temp = []
-    for history in histories:
-        temp.append({"input": history["question"], "output": history["answer"]})
-    docs = [
-        Document(page_content=f"input:{item['input']}\noutput:{item['output']}")
-        for item in temp
-    ]
-    try:
-        embeddings = OpenAIEmbeddings(openai_api_key=API_KEY)
-        vector_store = FAISS.from_documents(docs, embeddings)
-        found_docs = vector_store.similarity_search(message)
-        candidate = found_docs[0].page_content.split("\n")[1]
-        return candidate.replace("output:", "")
-    except IndexError:
-        return None
-
-
 with st.sidebar:
     API_KEY = get_api_key()
     is_valid = False
@@ -226,22 +202,16 @@ if is_valid:
 
     if message:
         send_message(message, "human")
-        is_answered = check_history(message)
-        if is_answered:
-            send_message(is_answered, "ai")
-        else:
-            chain = (
-                {
-                    "docs": retriever,
-                    "question": RunnablePassthrough(),
-                }
-                | RunnableLambda(get_answers)
-                | RunnableLambda(chooses_answer)
-            )
-            with st.chat_message("ai"):
-                request = chain.invoke(message).content.replace("$", "\$")
-                save_history(message, request)
+        chain = (
+            {
+                "docs": retriever,
+                "question": RunnablePassthrough(),
+            }
+            | RunnableLambda(get_answers)
+            | RunnableLambda(chooses_answer)
+        )
+        with st.chat_message("ai"):
+            request = chain.invoke(message).content.replace("$", "\$")
 
 else:
     st.session_state["messages"] = []
-    st.session_state["history"] = []
