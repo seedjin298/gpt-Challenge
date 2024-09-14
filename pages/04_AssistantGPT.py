@@ -179,6 +179,7 @@ if is_valid:
     paint_history()
     client = make_client(API_KEY)
     assistant = make_assistant(client)
+    st.write(assistant)
     thread = make_thread(client)
     question = st.chat_input("Ask anything to your Assistant...")
 
