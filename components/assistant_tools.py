@@ -1,4 +1,4 @@
-from langchain.tools import DuckDuckGoSearchResults
+from langchain.utilities import DuckDuckGoSearchAPIWrapper
 from langchain.tools import WikipediaQueryRun
 from langchain.utilities import WikipediaAPIWrapper
 from openai import OpenAI
@@ -21,7 +21,7 @@ def make_assistant(client):
 
 def DuckDuckGoSearchTool(inputs):
     query = inputs["query"]
-    ddg = DuckDuckGoSearchResults()
+    ddg = DuckDuckGoSearchAPIWrapper()
     return ddg.run(query)
 
 
