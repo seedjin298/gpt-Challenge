@@ -37,7 +37,7 @@ def check_in_progress(client, run_id, thread_id):
     run_status = get_run(client, run_id, thread_id).status
     while run_status == "in_progress":
         run_status = get_run(client, run_id, thread_id).status
-        print(f"Status: {run_status}")
+        st.write(f"Status: {run_status}")
     return run_status
 
 
@@ -175,7 +175,6 @@ st.markdown(
 )
 
 if is_valid:
-    st.markdown("Started Testing")
     send_message("I'm ready! Ask away!", "ai", save=False)
     paint_history()
     client = make_client(API_KEY)
@@ -185,9 +184,10 @@ if is_valid:
     if question:
         is_already_answered = False
         send_message(question, "human")
-
+        st.write("send message human")
         is_already_answered = check_and_display_answer(question)
         if not is_already_answered:
+            st.write("starting assistant")
             message = send_assistant_messages(client, thread.id, question)
             run = make_run(client, thread.id, question)
             run_status = check_in_progress(client, run.id, thread.id)
