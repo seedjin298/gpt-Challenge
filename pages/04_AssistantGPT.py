@@ -47,8 +47,11 @@ with st.sidebar:
 
     option = st.radio(
         "check the file for revealing code",
-        ("04_AssistantGPT.py", "assistant_tools.py", "assistant.py"),
+        ("dont show code", "04_AssistantGPT.py", "assistant_tools.py", "assistant.py"),
     )
+
+    if option == "dont show code":
+        st.markdown()
 
     if option == "04_AssistantGPT.py":
         st.markdown(
@@ -160,7 +163,6 @@ else:
     if option == "assistant_tools.py":
         st.markdown(
             """
-    # from langchain.tools import DuckDuckGoSearchRun
 from langchain.tools import WikipediaQueryRun, DuckDuckGoSearchRun
 from langchain.utilities import WikipediaAPIWrapper
 import openai as client

@@ -1,4 +1,3 @@
-# from langchain.tools import DuckDuckGoSearchRun
 from langchain.tools import WikipediaQueryRun, DuckDuckGoSearchRun
 from langchain.utilities import WikipediaAPIWrapper
 import openai as client
