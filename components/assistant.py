@@ -4,12 +4,15 @@ from openai import OpenAI
 
 from components.assistant_tools import functions_map
 
-client = OpenAI()
-
 assistant_id = "asst_SWfNqJyYIf3MoSLlsi9ZViJE"
 
 
-def make_thread(question):
+def make_client(api_key):
+    client = OpenAI(api_key=api_key)
+    return client
+
+
+def make_thread(client):
     if len(st.session_state["thread"]) == 0:
         thread = client.beta.threads.create()
         st.session_state["thread"].append(thread)
@@ -19,7 +22,7 @@ def make_thread(question):
         return thread
 
 
-def make_run(thread_id, question):
+def make_run(client, thread_id, question):
     for item in st.session_state["runs"]:
         if item["message"] == question:
             return item["run"]
@@ -35,27 +38,26 @@ def make_run(thread_id, question):
     return run
 
 
-def get_run(run_id, thread_id):
+def get_run(client, run_id, thread_id):
     return client.beta.threads.runs.retrieve(
         run_id=run_id,
         thread_id=thread_id,
     )
 
 
-def send_assistant_messages(thread_id, content):
+def send_assistant_messages(client, thread_id, content):
     return client.beta.threads.messages.create(
         thread_id=thread_id, role="user", content=content
     )
 
 
-def get_assistant_messages(thread_id, question):
+def get_assistant_messages(client, thread_id, question):
     messages = client.beta.threads.messages.list(thread_id=thread_id)
     messages = list(messages)
     messages.reverse()
     results = []
     result_index = 0
     for index, message in enumerate(messages):
-        print(message.role)
         if message.role == "assistant":
             result_index = index
         result = message.content[0].text.value
@@ -69,8 +71,8 @@ def get_assistant_messages(thread_id, question):
     return results[result_index]
 
 
-def get_tool_outputs(run_id, thread_id):
-    run = get_run(run_id, thread_id)
+def get_tool_outputs(client, run_id, thread_id):
+    run = get_run(client, run_id, thread_id)
     outputs = []
     for action in run.required_action.submit_tool_outputs.tool_calls:
         action_id = action.id
@@ -85,8 +87,8 @@ def get_tool_outputs(run_id, thread_id):
     return outputs
 
 
-def submit_tool_outputs(run_id, thread_id):
-    outputs = get_tool_outputs(run_id, thread_id)
+def submit_tool_outputs(client, run_id, thread_id):
+    outputs = get_tool_outputs(client, run_id, thread_id)
     return client.beta.threads.runs.submit_tool_outputs(
         run_id=run_id, thread_id=thread_id, tool_outputs=outputs
     )

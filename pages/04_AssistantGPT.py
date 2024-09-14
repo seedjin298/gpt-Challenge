@@ -3,6 +3,7 @@ import streamlit as st
 from components.check_api_key import get_api_key, is_api_key_valid
 from components.chatbot import send_message, paint_history
 from components.assistant import (
+    make_client,
     make_thread,
     make_run,
     get_run,
@@ -20,7 +21,7 @@ st.title("OpenAI Assistants")
 
 
 def display_answer(thread_id, question):
-    result = get_assistant_messages(thread_id, question)
+    result = get_assistant_messages(client, thread_id, question)
     send_message(result, "ai")
 
 
@@ -32,11 +33,11 @@ def check_and_display_answer(question):
             return is_already_answered
 
 
-def check_in_progress(run_id, thread_id):
-    run_status = get_run(run_id, thread_id).status
+def check_in_progress(client, run_id, thread_id):
+    run_status = get_run(client, run_id, thread_id).status
     while run_status == "in_progress":
-        run_status = get_run(run_id, thread_id).status
-        print(f"Status: {run_status}")
+        run_status = get_run(client, run_id, thread_id).status
+        # print(f"Status: {run_status}")
     return run_status
 
 
@@ -60,6 +61,7 @@ with st.sidebar:
 from components.check_api_key import get_api_key, is_api_key_valid
 from components.chatbot import send_message, paint_history
 from components.assistant import (
+    make_client,
     make_thread,
     make_run,
     get_run,
@@ -77,7 +79,7 @@ st.title('OpenAI Assistants')
 
 
 def display_answer(thread_id, question):
-    result = get_assistant_messages(thread_id, question)
+    result = get_assistant_messages(client, thread_id, question)
     send_message(result, 'ai')
 
 
@@ -89,11 +91,11 @@ def check_and_display_answer(question):
             return is_already_answered
 
 
-def check_in_progress(run_id, thread_id):
-    run_status = get_run(run_id, thread_id).status
+def check_in_progress(client, run_id, thread_id):
+    run_status = get_run(client, run_id, thread_id).status
     while run_status == 'in_progress':
-        run_status = get_run(run_id, thread_id).status
-        print(f'Status: {run_status}')
+        run_status = get_run(client, run_id, thread_id).status
+        # print(f'Status: {run_status}')
     return run_status
 
 
@@ -110,41 +112,45 @@ with st.sidebar:
 
     on = st.toggle('Show Code')
     if on:
-        st.markdown('
+        st.markdown(
+            '
     
-')
+
+'
+        )
 
 st.markdown(
-    '''  
+    '     
     Ask questions to the Assistant.
             
     The chatbot gives you answers by using DuckDuckGo and Wikipedia.
     
     Enter your OpenAI API Key to ask questions.
-'''
+'
 )
 
 if is_valid:
     st.markdown('Started Testing')
     send_message('I'm ready! Ask away!', 'ai', save=False)
     paint_history()
+    client = make_client(API_KEY)
+    thread = make_thread(client)
     question = st.chat_input('Ask anything to your Assistant...')
 
     if question:
         is_already_answered = False
         send_message(question, 'human')
-        thread = make_thread(question)
 
         is_already_answered = check_and_display_answer(question)
         if not is_already_answered:
-            message = send_assistant_messages(thread.id, question)
-            run = make_run(thread.id, question)
+            message = send_assistant_messages(client, thread.id, question)
+            run = make_run(client, thread.id, question)
 
-            run_status = check_in_progress(run.id, thread.id)
+            run_status = check_in_progress(client, run.id, thread.id)
             if run_status == 'requires_action':
                 while run_status == 'requires_action':
-                    submit_tool_outputs(run.id, thread.id)
-                    run_status = check_in_progress(run.id, thread.id)
+                    submit_tool_outputs(client, run.id, thread.id)
+                    run_status = check_in_progress(client, run.id, thread.id)
 
             if run_status == 'completed':
                 display_answer(thread.id, question)
@@ -172,23 +178,24 @@ if is_valid:
     st.markdown("Started Testing")
     send_message("I'm ready! Ask away!", "ai", save=False)
     paint_history()
+    client = make_client(API_KEY)
+    thread = make_thread(client)
     question = st.chat_input("Ask anything to your Assistant...")
 
     if question:
         is_already_answered = False
         send_message(question, "human")
-        thread = make_thread(question)
 
         is_already_answered = check_and_display_answer(question)
         if not is_already_answered:
-            message = send_assistant_messages(thread.id, question)
-            run = make_run(thread.id, question)
+            message = send_assistant_messages(client, thread.id, question)
+            run = make_run(client, thread.id, question)
 
-            run_status = check_in_progress(run.id, thread.id)
+            run_status = check_in_progress(client, run.id, thread.id)
             if run_status == "requires_action":
                 while run_status == "requires_action":
-                    submit_tool_outputs(run.id, thread.id)
-                    run_status = check_in_progress(run.id, thread.id)
+                    submit_tool_outputs(client, run.id, thread.id)
+                    run_status = check_in_progress(client, run.id, thread.id)
 
             if run_status == "completed":
                 display_answer(thread.id, question)
