@@ -2,7 +2,7 @@ import streamlit as st
 
 from components.check_api_key import get_api_key, is_api_key_valid
 from components.chatbot import send_message, paint_history
-from components.assistant_tools import make_client, make_assistant
+from components.assistant_tools import make_assistant
 from components.assistant import (
     make_thread,
     make_run,
@@ -21,7 +21,7 @@ st.title("OpenAI Assistants")
 
 
 def display_answer(thread_id, question):
-    result = get_assistant_messages(client, thread_id, question)
+    result = get_assistant_messages(thread_id, question)
     send_message(result, "ai")
 
 
@@ -33,10 +33,10 @@ def check_and_display_answer(question):
             return is_already_answered
 
 
-def check_in_progress(client, run_id, thread_id):
-    run_status = get_run(client, run_id, thread_id).status
+def check_in_progress(run_id, thread_id):
+    run_status = get_run(run_id, thread_id).status
     while run_status == "in_progress":
-        run_status = get_run(client, run_id, thread_id).status
+        run_status = get_run(run_id, thread_id).status
         st.write(f"Status: {run_status}")
     return run_status
 
@@ -177,9 +177,8 @@ st.markdown(
 if is_valid:
     send_message("I'm ready! Ask away!", "ai", save=False)
     paint_history()
-    client = make_client(API_KEY)
-    assistant = make_assistant(client)
-    thread = make_thread(client)
+    assistant = make_assistant(API_KEY)
+    thread = make_thread()
     question = st.chat_input("Ask anything to your Assistant...")
 
     if question:
@@ -189,11 +188,11 @@ if is_valid:
         is_already_answered = check_and_display_answer(question)
         if not is_already_answered:
             st.write("starting assistant")
-            message = send_assistant_messages(client, thread.id, question)
+            message = send_assistant_messages(thread.id, question)
             st.write(f"finish message: {message}")
-            run = make_run(client, assistant.id, thread.id, question)
+            run = make_run(assistant.id, thread.id, question)
             st.write(f"finish run: {run}")
-            run_status = check_in_progress(client, run.id, thread.id)
+            run_status = check_in_progress(run.id, thread.id)
             st.write(f"finish run_status: {run_status}")
             while run_status != "completed":
                 st.write(f"1: {run_status}")
@@ -201,8 +200,8 @@ if is_valid:
                     st.write(f"3: {run_status}")
                     while run_status == "requires_action":
                         st.write(f"4: {run_status}")
-                        submit_tool_outputs(client, run.id, thread.id)
-                        run_status = check_in_progress(client, run.id, thread.id)
+                        submit_tool_outputs(run.id, thread.id)
+                        run_status = check_in_progress(run.id, thread.id)
 
             if run_status == "completed":
                 display_answer(thread.id, question)
