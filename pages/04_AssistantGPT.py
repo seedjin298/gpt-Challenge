@@ -190,12 +190,13 @@ if is_valid:
         if not is_already_answered:
             message = send_assistant_messages(client, thread.id, question)
             run = make_run(client, thread.id, question)
-
             run_status = check_in_progress(client, run.id, thread.id)
-            if run_status == "requires_action":
-                while run_status == "requires_action":
-                    submit_tool_outputs(client, run.id, thread.id)
-                    run_status = check_in_progress(client, run.id, thread.id)
+            while run_status != "completed":
+                with st.spinner("Waiting for Assistant to answer..."):
+                    if run_status == "requires_action":
+                        while run_status == "requires_action":
+                            submit_tool_outputs(client, run.id, thread.id)
+                            run_status = check_in_progress(client, run.id, thread.id)
 
             if run_status == "completed":
                 display_answer(thread.id, question)
