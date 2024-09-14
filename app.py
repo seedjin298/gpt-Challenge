@@ -24,5 +24,9 @@ st.markdown(
     ## SiteGPT
     [SiteGPT](/SiteGPT)
     - Upload a sitemap and ask questions to chatbot!
+
+    ## AssistantGPT
+    [AssistantGPT](/AssistantGPT)
+    - Ask questions to Assistant!
 """
 )
