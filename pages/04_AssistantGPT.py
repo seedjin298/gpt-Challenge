@@ -1,215 +1,309 @@
+from openai import OpenAI, AssistantEventHandler
+from typing_extensions import override
 import streamlit as st
 
-from components.check_api_key import get_api_key, is_api_key_valid
-from components.chatbot import send_message, paint_history
-from components.assistant_tools import make_client, make_assistant
-from components.assistant import (
-    make_thread,
-    make_run,
-    get_run,
-    send_assistant_messages,
-    get_assistant_messages,
-    submit_tool_outputs,
-)
-
-st.set_page_config(
-    page_title="OpenAI Assistants",
-    page_icon="🖥️",
-)
-
-st.title("OpenAI Assistants")
+st.title("OpenAI Assistant")
 
 
-def display_answer(thread_id, question):
-    result = get_assistant_messages(client, thread_id, question)
-    send_message(result, "ai")
+class EventHandler(AssistantEventHandler):
+    @override
+    def on_event(self, event):
+        # Retrieve events that are denoted with 'requires_action'
+        # since these will have our tool_calls
+        if event.event == "thread.run.requires_action":
+            run_id = event.data.id  # Retrieve the run ID from the event data
+            self.message = ""
+            self.message_box = st.empty()
+            self.handle_requires_action(event.data, run_id)
+
+    def handle_requires_action(self, data, run_id):
+        tool_outputs = []
+
+        for tool in data.required_action.submit_tool_outputs.tool_calls:
+            if tool.function.name == "research_on_ddg":
+                tool_outputs.append({"tool_call_id": tool.id, "output": "ddg"})
+            elif tool.function.name == "research_on_wp":
+                tool_outputs.append({"tool_call_id": tool.id, "output": "wp"})
+
+        # Submit all tool_outputs at the same time
+        self.submit_tool_outputs(tool_outputs, run_id)
+
+    def submit_tool_outputs(self, tool_outputs, run_id):
+        # Use the submit_tool_outputs_stream helper
+        with client.beta.threads.runs.submit_tool_outputs_stream(
+            thread_id=self.current_run.thread_id,
+            run_id=self.current_run.id,
+            tool_outputs=tool_outputs,
+            event_handler=EventHandler(),
+        ) as stream:
+            for text in stream.text_deltas:
+                self.message += text
+                self.message_box.markdown(self.message)
+                print(text, end="", flush=True)
+        st.session_state["recent_answer"] = self.message
 
 
-def check_and_display_answer(question):
-    for result in st.session_state["results"]:
-        if result["message"] == question:
-            is_already_answered = True
-            send_message(result["result"], "ai")
-            return is_already_answered
+def set_api_key():
+    st.session_state["api_key"] = st.session_state["api_key_input"]
+    st.session_state["api_key_input"] = ""
 
 
-def check_in_progress(client, run_id, thread_id):
-    run_status = get_run(client, run_id, thread_id).status
-    while run_status == "in_progress":
-        run_status = get_run(client, run_id, thread_id).status
-        st.write(f"Status: {run_status}")
-    return run_status
+def reset_api_key():
+    del st.session_state["api_key"]
 
 
-with st.sidebar:
-    API_KEY = get_api_key()
-    is_valid = False
-    if API_KEY:
-        is_valid = is_api_key_valid(API_KEY)
+if "api_key" in st.session_state:
+    with st.sidebar:
+        st.text("Your key applied successfully")
+        st.button("Reset", type="primary", on_click=reset_api_key)
 
-    st.link_button(
-        "Go to Github Repo",
-        "https://github.com/seedjin298/gpt-Challenge/blob/main/pages/04_AssistantGPT.py",
-    )
+    if "client" in st.session_state:
+        client = st.session_state["client"]
+        assistant = st.session_state["assistant"]
+        thread = st.session_state["thread"]
+    else:
+        client = OpenAI(api_key=st.session_state["api_key"])
+        assistant = client.beta.assistants.create(
+            name="Research Assistant",
+            instructions="You help research with two tools:DuckDuckGo and Wikipedia. Return the result with tool name on the top.",
+            model="gpt-4o-mini",
+            temperature=0.1,
+            tools=[
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "research_on_ddg",
+                        "description": "Get the research result for the query on the DuckDuckGo.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "query": {
+                                    "type": "string",
+                                    "description": "full string of user's input",
+                                },
+                            },
+                            "required": ["query"],
+                        },
+                    },
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "research_on_wp",
+                        "description": "Get the research result for the query on the Wikipedia.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "query": {
+                                    "type": "string",
+                                    "description": "full string of user's input",
+                                },
+                            },
+                            "required": ["query"],
+                        },
+                    },
+                },
+            ],
+        )
+        thread = client.beta.threads.create()
+        st.session_state["client"] = client
+        st.session_state["assistant"] = assistant
+        st.session_state["thread"] = thread
 
-    on = st.toggle("Show Code")
-    if on:
-        st.markdown(
-            """
-    import streamlit as st
+    messages = client.beta.threads.messages.list(thread_id=thread.id)
+    if messages:
+        messages = list(messages)
+        messages.reverse()
+        for message in messages:
+            st.chat_message(message.role).write(message.content[0].text.value)
 
-from components.check_api_key import get_api_key, is_api_key_valid
-from components.chatbot import send_message, paint_history
-from components.assistant import (
-    make_client,
-    make_thread,
-    make_run,
-    get_run,
-    send_assistant_messages,
-    get_assistant_messages,
-    submit_tool_outputs,
-)
-
-st.set_page_config(
-    page_title='OpenAI Assistants',
-    page_icon='🖥️',
-)
-
-st.title('OpenAI Assistants')
-
-
-def display_answer(thread_id, question):
-    result = get_assistant_messages(client, thread_id, question)
-    send_message(result, 'ai')
-
-
-def check_and_display_answer(question):
-    for result in st.session_state['results']:
-        if result['message'] == question:
-            is_already_answered = True
-            send_message(result['result'], 'ai')
-            return is_already_answered
-
-
-def check_in_progress(client, run_id, thread_id):
-    run_status = get_run(client, run_id, thread_id).status
-    while run_status == 'in_progress':
-        run_status = get_run(client, run_id, thread_id).status
-        # print(f'Status: {run_status}')
-    return run_status
-
-
-with st.sidebar:
-    API_KEY = get_api_key()
-    is_valid = False
-    if API_KEY:
-        is_valid = is_api_key_valid(API_KEY)
-
-    st.link_button(
-        'Go to Github Repo',
-        'https://github.com/seedjin298/gpt-Challenge/blob/main/pages/04_AssistantGPT.py',
-    )
-
-    on = st.toggle('Show Code')
-    if on:
-        st.markdown(
-            '
-    
-
-'
+    question = st.chat_input("Ask to chatbot anything!!")
+    if question:
+        with st.chat_message("user"):
+            st.write(question)
+        message = client.beta.threads.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=question,
         )
 
-st.markdown(
-    '     
-    Ask questions to the Assistant.
-            
-    The chatbot gives you answers by using DuckDuckGo and Wikipedia.
-    
-    Enter your OpenAI API Key to ask questions.
-'
-)
+        with st.chat_message("ai"):
+            with client.beta.threads.runs.stream(
+                thread_id=thread.id,
+                assistant_id=assistant.id,
+                event_handler=EventHandler(),
+            ) as stream:
+                stream.until_done()
+            # save the recent answer
+            st.download_button(
+                "Download this answer", st.session_state["recent_answer"]
+            )
 
-if is_valid:
-    st.markdown('Started Testing')
-    send_message('I'm ready! Ask away!', 'ai', save=False)
-    paint_history()
-    client = make_client(API_KEY)
-    thread = make_thread(client)
-    question = st.chat_input('Ask anything to your Assistant...')
-
-    if question:
-        is_already_answered = False
-        send_message(question, 'human')
-
-        is_already_answered = check_and_display_answer(question)
-        if not is_already_answered:
-            message = send_assistant_messages(client, thread.id, question)
-            run = make_run(client, thread.id, question)
-
-            run_status = check_in_progress(client, run.id, thread.id)
-            if run_status == 'requires_action':
-                while run_status == 'requires_action':
-                    submit_tool_outputs(client, run.id, thread.id)
-                    run_status = check_in_progress(client, run.id, thread.id)
-
-            if run_status == 'completed':
-                display_answer(thread.id, question)
 
 else:
-    st.session_state['messages'] = []
-    st.session_state['thread'] = []
-    st.session_state['runs'] = []
-    st.session_state['results'] = []
+    st.sidebar.text_input(
+        "Apply your api key",
+        key="api_key_input",
+        on_change=set_api_key,
+    )
 
-"""
+
+# For challenge
+
+with st.sidebar:
+    st.link_button(
+        "Go to repository", "https://github.com/sweetandsourkiss/fullstack-gpt"
+    )
+    st.code(
+        """
+        from openai import OpenAI, AssistantEventHandler
+from typing_extensions import override
+import streamlit as st
+
+st.title("OpenAI Assistant")
+
+
+class EventHandler(AssistantEventHandler):
+    @override
+    def on_event(self, event):
+        # Retrieve events that are denoted with 'requires_action'
+        # since these will have our tool_calls
+        if event.event == "thread.run.requires_action":
+            run_id = event.data.id  # Retrieve the run ID from the event data
+            self.message = ""
+            self.message_box = st.empty()
+            self.handle_requires_action(event.data, run_id)
+
+    def handle_requires_action(self, data, run_id):
+        tool_outputs = []
+
+        for tool in data.required_action.submit_tool_outputs.tool_calls:
+            if tool.function.name == "research_on_ddg":
+                tool_outputs.append({"tool_call_id": tool.id, "output": "ddg"})
+            elif tool.function.name == "research_on_wp":
+                tool_outputs.append({"tool_call_id": tool.id, "output": "wp"})
+
+        # Submit all tool_outputs at the same time
+        self.submit_tool_outputs(tool_outputs, run_id)
+
+    def submit_tool_outputs(self, tool_outputs, run_id):
+        # Use the submit_tool_outputs_stream helper
+        with client.beta.threads.runs.submit_tool_outputs_stream(
+            thread_id=self.current_run.thread_id,
+            run_id=self.current_run.id,
+            tool_outputs=tool_outputs,
+            event_handler=EventHandler(),
+        ) as stream:
+            for text in stream.text_deltas:
+                self.message += text
+                self.message_box.markdown(self.message)
+                print(text, end="", flush=True)
+        st.session_state["recent_answer"] = self.message
+
+
+def set_api_key():
+    st.session_state["api_key"] = st.session_state["api_key_input"]
+    st.session_state["api_key_input"] = ""
+
+
+def reset_api_key():
+    del st.session_state["api_key"]
+
+
+if "api_key" in st.session_state:
+    with st.sidebar:
+        st.text("Your key applied successfully")
+        st.button("Reset", type="primary", on_click=reset_api_key)
+
+    if "client" in st.session_state:
+        client = st.session_state["client"]
+        assistant = st.session_state["assistant"]
+        thread = st.session_state["thread"]
+    else:
+        client = OpenAI(api_key=st.session_state["api_key"])
+        assistant = client.beta.assistants.create(
+            name="Research Assistant",
+            instructions="You help research with two tools:DuckDuckGo and Wikipedia. Return the result with tool name on the top.",
+            model="gpt-4o-mini",
+            temperature=0.1,
+            tools=[
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "research_on_ddg",
+                        "description": "Get the research result for the query on the DuckDuckGo.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "query": {
+                                    "type": "string",
+                                    "description": "full string of user's input",
+                                },
+                            },
+                            "required": ["query"],
+                        },
+                    },
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "research_on_wp",
+                        "description": "Get the research result for the query on the Wikipedia.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "query": {
+                                    "type": "string",
+                                    "description": "full string of user's input",
+                                },
+                            },
+                            "required": ["query"],
+                        },
+                    },
+                },
+            ],
+        )
+        thread = client.beta.threads.create()
+        st.session_state["client"] = client
+        st.session_state["assistant"] = assistant
+        st.session_state["thread"] = thread
+
+    messages = client.beta.threads.messages.list(thread_id=thread.id)
+    if messages:
+        messages = list(messages)
+        messages.reverse()
+        for message in messages:
+            st.chat_message(message.role).write(message.content[0].text.value)
+
+    question = st.chat_input("Ask to chatbot anything!!")
+    if question:
+        with st.chat_message("user"):
+            st.write(question)
+        message = client.beta.threads.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=question,
         )
 
-st.markdown(
-    """     
-    Ask questions to the Assistant.
-            
-    The chatbot gives you answers by using DuckDuckGo and Wikipedia.
-    
-    Enter your OpenAI API Key to ask questions.
-"""
-)
+        with st.chat_message("ai"):
+            with client.beta.threads.runs.stream(
+                thread_id=thread.id,
+                assistant_id=assistant.id,
+                event_handler=EventHandler(),
+            ) as stream:
+                stream.until_done()
+            # save the recent answer
+            st.download_button(
+                "Download this answer", st.session_state["recent_answer"]
+            )
 
-if is_valid:
-    send_message("I'm ready! Ask away!", "ai", save=False)
-    paint_history()
-    client = make_client(API_KEY)
-    assistant = make_assistant(client)
-    thread = make_thread(client)
-    question = st.chat_input("Ask anything to your Assistant...")
-
-    if question:
-        is_already_answered = False
-        send_message(question, "human")
-        st.write("send message human")
-        is_already_answered = check_and_display_answer(question)
-        if not is_already_answered:
-            st.write("starting assistant")
-            message = send_assistant_messages(client, thread.id, question)
-            st.write(f"finish message: {message}")
-            run = make_run(client, assistant.id, thread.id, question)
-            st.write(f"finish run: {run}")
-            run_status = check_in_progress(client, run.id, thread.id)
-            st.write(f"finish run_status: {run_status}")
-            while run_status != "completed":
-                st.write(f"1: {run_status}")
-                if run_status == "requires_action":
-                    st.write(f"3: {run_status}")
-                    while run_status == "requires_action":
-                        st.write(f"4: {run_status}")
-                        submit_tool_outputs(client, run.id, thread.id)
-                        run_status = check_in_progress(client, run.id, thread.id)
-
-            if run_status == "completed":
-                display_answer(thread.id, question)
 
 else:
-    st.session_state["client"] = []
-    st.session_state["messages"] = []
-    st.session_state["thread"] = []
-    st.session_state["runs"] = []
-    st.session_state["results"] = []
+    st.sidebar.text_input(
+        "Apply your api key",
+        key="api_key_input",
+        on_change=set_api_key,
+    )
+
+    """
+    )
