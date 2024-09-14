@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 
 from components.check_api_key import get_api_key, is_api_key_valid
 from components.chatbot import send_message, paint_history
@@ -195,12 +196,14 @@ if is_valid:
             run_status = check_in_progress(run.id, thread.id)
             st.write(f"finish run_status: {run_status}")
             while run_status != "completed":
+                time.sleep(1)
                 st.write(f"1: {run_status}")
                 if run_status == "requires_action":
                     st.write(f"3: {run_status}")
                     while run_status == "requires_action":
                         st.write(f"4: {run_status}")
                         submit_tool_outputs(run.id, thread.id)
+                        time.sleep(1)
                         run_status = check_in_progress(run.id, thread.id)
 
             if run_status == "completed":
