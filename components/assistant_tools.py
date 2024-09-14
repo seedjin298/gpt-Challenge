@@ -1,6 +1,22 @@
 from langchain.tools import DuckDuckGoSearchResults
 from langchain.tools import WikipediaQueryRun
 from langchain.utilities import WikipediaAPIWrapper
+from openai import OpenAI
+
+
+def make_client(api_key):
+    client = OpenAI(api_key=api_key)
+    return client
+
+
+def make_assistant(client):
+    assistant = client.beta.assistants.create(
+        name="Researcher Assistant",
+        instructions="You help users do research using DuckDuckGo and Wikipedia.",
+        model="gpt-4-1106-preview",
+        tools=functions,
+    )
+    return assistant
 
 
 def DuckDuckGoSearchTool(inputs):

@@ -2,8 +2,8 @@ import streamlit as st
 
 from components.check_api_key import get_api_key, is_api_key_valid
 from components.chatbot import send_message, paint_history
+from components.assistant_tools import make_client, make_assistant
 from components.assistant import (
-    make_client,
     make_thread,
     make_run,
     get_run,
@@ -178,6 +178,7 @@ if is_valid:
     send_message("I'm ready! Ask away!", "ai", save=False)
     paint_history()
     client = make_client(API_KEY)
+    assistant = make_assistant(client)
     thread = make_thread(client)
     question = st.chat_input("Ask anything to your Assistant...")
 
@@ -190,7 +191,7 @@ if is_valid:
             st.write("starting assistant")
             message = send_assistant_messages(client, thread.id, question)
             st.write(f"finish message: {message}")
-            run = make_run(client, thread.id, question)
+            run = make_run(client, assistant.id, thread.id, question)
             st.write(f"finish run: {run}")
             run_status = check_in_progress(client, run.id, thread.id)
             st.write(f"finish run_status: {run_status}")
@@ -209,6 +210,7 @@ if is_valid:
             #     display_answer(thread.id, question)
 
 else:
+    st.session_state["client"] = []
     st.session_state["messages"] = []
     st.session_state["thread"] = []
     st.session_state["runs"] = []

@@ -1,15 +1,9 @@
 import json
 import streamlit as st
-from openai import OpenAI
 
 from components.assistant_tools import functions_map
 
-assistant_id = "asst_SWfNqJyYIf3MoSLlsi9ZViJE"
-
-
-def make_client(api_key):
-    client = OpenAI(api_key=api_key)
-    return client
+# assistant_id = "asst_SWfNqJyYIf3MoSLlsi9ZViJE"
 
 
 def make_thread(client):
@@ -22,7 +16,7 @@ def make_thread(client):
         return thread
 
 
-def make_run(client, thread_id, question):
+def make_run(client, assistant_id, thread_id, question):
     for item in st.session_state["runs"]:
         if item["message"] == question:
             return item["run"]
