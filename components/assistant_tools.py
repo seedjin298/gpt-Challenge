@@ -13,7 +13,7 @@ def make_assistant(client):
     assistant = client.beta.assistants.create(
         name="Researcher Assistant",
         instructions="You help users do research using DuckDuckGo and Wikipedia.",
-        model="gpt-4-1106-preview",
+        model="gpt-4o",
         tools=functions,
     )
     return assistant
