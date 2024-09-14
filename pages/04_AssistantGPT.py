@@ -189,8 +189,11 @@ if is_valid:
         if not is_already_answered:
             st.write("starting assistant")
             message = send_assistant_messages(client, thread.id, question)
+            st.write("finish message")
             run = make_run(client, thread.id, question)
+            st.write("finish run")
             run_status = check_in_progress(client, run.id, thread.id)
+            st.write("finish run_status")
             while run_status != "completed":
                 with st.spinner("Waiting for Assistant to answer..."):
                     if run_status == "requires_action":
