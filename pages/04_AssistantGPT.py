@@ -37,7 +37,7 @@ def check_in_progress(client, run_id, thread_id):
     run_status = get_run(client, run_id, thread_id).status
     while run_status == "in_progress":
         run_status = get_run(client, run_id, thread_id).status
-        # print(f"Status: {run_status}")
+        print(f"Status: {run_status}")
     return run_status
 
 
