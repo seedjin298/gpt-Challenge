@@ -189,24 +189,24 @@ if is_valid:
         if not is_already_answered:
             st.write("starting assistant")
             message = send_assistant_messages(client, thread.id, question)
-            st.write("finish message")
+            st.write(f"finish message: {message}")
             run = make_run(client, thread.id, question)
-            st.write("finish run")
-            run_status = check_in_progress(client, run.id, thread.id)
-            st.write("finish run_status")
-            while run_status != "completed":
-                st.write(f"1: {run_status}")
-                with st.spinner("Waiting for Assistant to answer..."):
-                    st.write(f"2: {run_status}")
-                    if run_status == "requires_action":
-                        st.write(f"3: {run_status}")
-                        while run_status == "requires_action":
-                            st.write(f"4: {run_status}")
-                            submit_tool_outputs(client, run.id, thread.id)
-                            run_status = check_in_progress(client, run.id, thread.id)
+            st.write(f"finish run: {run}")
+            # run_status = check_in_progress(client, run.id, thread.id)
+            # st.write("finish run_status")
+            # while run_status != "completed":
+            #     st.write(f"1: {run_status}")
+            #     with st.spinner("Waiting for Assistant to answer..."):
+            #         st.write(f"2: {run_status}")
+            #         if run_status == "requires_action":
+            #             st.write(f"3: {run_status}")
+            #             while run_status == "requires_action":
+            #                 st.write(f"4: {run_status}")
+            #                 submit_tool_outputs(client, run.id, thread.id)
+            #                 run_status = check_in_progress(client, run.id, thread.id)
 
-            if run_status == "completed":
-                display_answer(thread.id, question)
+            # if run_status == "completed":
+            #     display_answer(thread.id, question)
 
 else:
     st.session_state["messages"] = []
