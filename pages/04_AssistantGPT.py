@@ -192,8 +192,8 @@ if is_valid:
             st.write(f"finish message: {message}")
             run = make_run(client, thread.id, question)
             st.write(f"finish run: {run}")
-            # run_status = check_in_progress(client, run.id, thread.id)
-            # st.write("finish run_status")
+            run_status = check_in_progress(client, run.id, thread.id)
+            st.write(f"finish run_status: {run_status}")
             # while run_status != "completed":
             #     st.write(f"1: {run_status}")
             #     with st.spinner("Waiting for Assistant to answer..."):
