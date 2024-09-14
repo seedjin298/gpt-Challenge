@@ -1,6 +1,6 @@
 # from langchain.tools import DuckDuckGoSearchRun
-from langchain.tools import WikipediaQueryRun, DuckDuckGoSearchRun
-from langchain.utilities import WikipediaAPIWrapper
+from langchain_community.retrievers import WikipediaRetriever
+from langchain_community.tools import DuckDuckGoSearchResults
 from openai import OpenAI
 
 
@@ -21,13 +21,13 @@ def make_assistant(client):
 
 def DuckDuckGoSearchTool(inputs):
     query = inputs["query"]
-    ddg = DuckDuckGoSearchRun()
+    ddg = DuckDuckGoSearchResults()
     return ddg.run(query)
 
 
 def WikipediaSearchTool(inputs):
     query = inputs["query"]
-    wikipedia = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
+    wikipedia = WikipediaRetriever(top_k_results=3)
     return wikipedia.run(query)
 
 
