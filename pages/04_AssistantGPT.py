@@ -51,7 +51,7 @@ with st.sidebar:
     )
 
     if option == "dont show code":
-        st.markdown()
+        st.write()
 
     if option == "04_AssistantGPT.py":
         st.markdown(
