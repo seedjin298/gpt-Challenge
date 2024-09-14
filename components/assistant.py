@@ -3,8 +3,6 @@ import streamlit as st
 
 from components.assistant_tools import functions_map
 
-# assistant_id = "asst_SWfNqJyYIf3MoSLlsi9ZViJE"
-
 
 def make_thread(client):
     if len(st.session_state["thread"]) == 0:
