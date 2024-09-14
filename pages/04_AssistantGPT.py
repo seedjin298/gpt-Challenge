@@ -34,12 +34,12 @@ def check_and_display_answer(question):
             return is_already_answered
 
 
-def check_in_progress(run_id, thread_id):
-    run_status = get_run(run_id, thread_id).status
-    while run_status == "in_progress":
-        run_status = get_run(run_id, thread_id).status
-        st.write(f"Status: {run_status}")
-    return run_status
+# def check_in_progress(run_id, thread_id):
+#     run_status = get_run(run_id, thread_id).status
+#     while run_status == "in_progress":
+#         run_status = get_run(run_id, thread_id).status
+#         st.write(f"Status: {run_status}")
+#     return run_status
 
 
 with st.sidebar:
@@ -193,18 +193,18 @@ if is_valid:
             st.write(f"finish message: {message}")
             run = make_run(assistant.id, thread.id, question)
             st.write(f"finish run: {run}")
-            run_status = check_in_progress(run.id, thread.id)
-            st.write(f"finish run_status: {run_status}")
+            run_status = get_run(run.id, thread.id).status
             while run_status != "completed":
-                time.sleep(1)
                 st.write(f"1: {run_status}")
+                run_status = get_run(run.id, thread.id).status
+                time.sleep(1)
                 if run_status == "requires_action":
                     st.write(f"3: {run_status}")
                     while run_status == "requires_action":
                         st.write(f"4: {run_status}")
                         submit_tool_outputs(run.id, thread.id)
                         time.sleep(1)
-                        run_status = check_in_progress(run.id, thread.id)
+                        run_status = get_run(run.id, thread.id).status
 
             if run_status == "completed":
                 display_answer(thread.id, question)
