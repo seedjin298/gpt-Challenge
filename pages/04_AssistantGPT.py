@@ -195,7 +195,9 @@ if is_valid:
             run_status = check_in_progress(client, run.id, thread.id)
             st.write("finish run_status")
             while run_status != "completed":
+                st.write("starting spinner")
                 with st.spinner("Waiting for Assistant to answer..."):
+                    st.write("inside spinner")
                     if run_status == "requires_action":
                         while run_status == "requires_action":
                             submit_tool_outputs(client, run.id, thread.id)
