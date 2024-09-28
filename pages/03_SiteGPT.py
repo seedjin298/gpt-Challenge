@@ -140,7 +140,7 @@ def parse_page(soup):
     return str(soup.get_text()).replace("\n", "").replace("\t", "")
 
 
-@st.cache_data(show_spinner="Loading website...")
+@st.cache_resource(show_spinner="Loading website...")
 def load_website(url):
     try:
         splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(

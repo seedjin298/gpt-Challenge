@@ -28,7 +28,7 @@ def split_file(file, dir):
     return docs
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def embed_file(file, dir, api_key):
     docs = split_file(file, dir)
 
